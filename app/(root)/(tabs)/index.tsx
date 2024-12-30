@@ -15,7 +15,8 @@ import icons from "@/constants/icon";
 import Search from "@/components/Search";
 import Filters from "@/components/Filters";
 import NoResults from "@/components/NoResults";
-import {Cards, FeaturedCard} from "@/components/Cards";
+import Cards from "@/components/Cards";
+
 
 import { useAppwrite } from "@/lib/useAppwrite";
 import { useGlobalContext } from "@/lib/global-provider";
@@ -61,7 +62,7 @@ return (
         data={properties}
         numColumns={2}
         renderItem={({ item }) => (
-        <Card item={item} onPress={() => handleCardPress(item.$id)} />
+        <Cards item={item} onPress={() => handleCardPress(item.$id)} />
         )}
         keyExtractor={(item) => item.$id}
         contentContainerClassName="pb-32"
