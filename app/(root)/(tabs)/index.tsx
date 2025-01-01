@@ -1,5 +1,6 @@
 import {
 ActivityIndicator,
+    Button,
 FlatList,
 Image,
 Text,
@@ -21,6 +22,7 @@ import { Card, FeaturedCard } from "@/components/Cards";
 import { useAppwrite } from "@/lib/useAppwrite";
 import { useGlobalContext } from "@/lib/global-provider";
 import { getLatestProperties, getProperties } from "@/lib/appwrite";
+// import seed from "@/lib/seed";
 
 const Home = () => {
 const { user } = useGlobalContext();
@@ -58,6 +60,7 @@ const handleCardPress = (id: string) => router.push(`/properties/${id}`);
 
 return (
     <SafeAreaView className="h-full bg-white">
+    {/* <Button title="Seed" onPress={seed}></Button> */}
     <FlatList
         data={properties}
         numColumns={2}
