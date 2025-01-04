@@ -12,6 +12,7 @@ import {
   import { openAuthSessionAsync } from "expo-web-browser";
   import { Property } from "@/types/property";
   
+  
   export const config = {
     platform: "swiftspace",
     endpoint: process.env.EXPO_PUBLIC_APPWRITE_ENDPOINT,
@@ -23,6 +24,7 @@ import {
     agentsCollectionId: process.env.EXPO_PUBLIC_APPWRITE_AGENTS_COLLECTION_ID,
     propertiesCollectionId:
       process.env.EXPO_PUBLIC_APPWRITE_PROPERTIES_COLLECTION_ID,
+    favoritesCollectionId: process.env.EXPO_PUBLIC_APPWRITE_FAVORITES_COLLECTION_ID,
     bucketId: process.env.EXPO_PUBLIC_APPWRITE_BUCKET_ID,
   };
   
@@ -286,5 +288,69 @@ import {
     } catch (error) {
       console.error('Error deleting property:', error);
       throw error;
+    }
+  }
+
+  export async function addToFavorites(propertyId: string, userId: string) {
+    try {
+      const result = await databases.createDocument(
+        config.databaseId!,
+        config.favoritesCollectionId!,
+        ID.unique(),
+        {
+          user_id: userId,
+          property_id: propertyId,
+          created_at: new Date().toISOString(),
+        }
+      );
+      return result;
+    } catch (error) {
+      console.error('Error adding to favorites:', error);
+      return null;
+    }
+  }
+
+  export async function removeFromFavorites(favoriteId: string) {
+    try {
+      await databases.deleteDocument(
+        config.databaseId!,
+        config.favoritesCollectionId!,
+        favoriteId
+      );
+      return true;
+    } catch (error) {
+      console.error('Error removing from favorites:', error);
+      return false;
+    }
+  }
+  
+  export async function getFavorites(userId: string) {
+    try {
+      const result = await databases.listDocuments(
+        config.databaseId!,
+        config.favoritesCollectionId!,
+        [Query.equal('user_id', userId)]
+      );
+      return result.documents;
+    } catch (error) {
+      console.error('Error getting favorites:', error);
+      return [];
+    }
+  }
+  
+  export async function checkIsFavorite(propertyId: string, userId: string) {
+    try {
+      const result = await databases.listDocuments(
+        config.databaseId!,
+        config.favoritesCollectionId!,
+        [
+          Query.equal('user_id', userId),
+          Query.equal('property_id', propertyId),
+        ]
+      );
+      return result.documents.length > 0 ? result.documents[0] : null;
+    } catch (error) {
+      console.error('Error checking favorite:', error);
+      return null;
     }
   }
