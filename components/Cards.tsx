@@ -2,6 +2,7 @@ import icons from "@/constants/icon";
 import images from "@/constants/images";
 import { Image, Text, TouchableOpacity, View } from "react-native";
 import { Models } from "react-native-appwrite";
+import FavoriteButton from "./FavoriteButton";
 
 interface Props {
   item: Models.Document;
@@ -43,7 +44,7 @@ export const FeaturedCard = ({ item, onPress }: Props) => {
           <Text className="text-xl font-rubik-extrabold text-white">
             ${item.price}
           </Text>
-          <Image source={icons.heart} className="size-5" />
+          <FavoriteButton propertyId={item.$id} size={5} style="mr-2" />
         </View>
       </View>
     </TouchableOpacity>
@@ -77,11 +78,7 @@ export const Card = ({ item, onPress }: Props) => {
           <Text className="text-base font-rubik-bold text-primary-300">
             ${item.price}
           </Text>
-          <Image
-            source={icons.heart}
-            className="w-5 h-5 mr-2"
-            tintColor="#191D31"
-          />
+          <FavoriteButton propertyId={item.$id} size={5} style="mr-2" />
         </View>
       </View>
     </TouchableOpacity>
