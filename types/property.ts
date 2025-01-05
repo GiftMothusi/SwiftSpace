@@ -15,6 +15,7 @@ export interface Property {
     agent: string;  // Reference to the agent ID
     createdAt?: string;  // Timestamp of creation
     updatedAt?: string;  // Timestamp of last update
+    
   }
   
 // Define all possible property types
@@ -32,6 +33,12 @@ export type PropertyType =
 export type PropertyStatus = 
     | "Available"
     | "Sold"
-    | "Under Contract"
-    | "Coming Soon";
+    | "Under-Contract"
+    | "Rented";
 
+export const PropertyStatusColors = {
+    Available: "bg-green-500",
+    Rented: "bg-blue-500",
+    Sold: "bg-red-500",
+    "Under-Contract": "bg-yellow-500"
+} as const;
