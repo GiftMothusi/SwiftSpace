@@ -3,6 +3,8 @@ import images from "@/constants/images";
 import { Image, Text, TouchableOpacity, View } from "react-native";
 import { Models } from "react-native-appwrite";
 import FavoriteButton from "./FavoriteButton";
+import PropertyStatusBadge from "./PropertyStatusBadge";
+import { PropertyStatus } from "@/types/property";
 
 interface Props {
   item: Models.Document;
@@ -16,6 +18,10 @@ export const FeaturedCard = ({ item, onPress }: Props) => {
       className="flex flex-col items-start w-60 h-80 relative"
     >
       <Image source={{ uri: item.image }} className="size-full rounded-2xl" />
+      <PropertyStatusBadge 
+        status={item.status as PropertyStatus} 
+        className="absolute top-5 left-5 z-50"
+      />
 
       <Image
         source={images.cardGradient}
@@ -57,6 +63,10 @@ export const Card = ({ item, onPress }: Props) => {
       className="flex-1 w-full mt-4 px-3 py-4 rounded-lg bg-white shadow-lg shadow-black-100/70 relative"
       onPress={onPress}
     >
+      <PropertyStatusBadge 
+        status={item.status as PropertyStatus} 
+        className="absolute left-5 top-5 z-50"
+      />
       <View className="flex flex-row items-center absolute px-2 top-5 right-5 bg-white/90 p-1 rounded-full z-50">
         <Image source={icons.star} className="size-2.5" />
         <Text className="text-xs font-rubik-bold text-primary-300 ml-0.5">

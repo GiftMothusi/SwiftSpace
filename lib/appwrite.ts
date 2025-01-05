@@ -117,10 +117,12 @@ import {
   
   export async function getProperties({
     filter,
+    status,
     query,
     limit,
   }: {
     filter: string;
+    status?: string;
     query: string;
     limit?: number;
   }) {
@@ -129,6 +131,9 @@ import {
   
       if (filter && filter !== "All")
         buildQuery.push(Query.equal("type", filter));
+      
+      if (status)
+        buildQuery.push(Query.equal("status", status));
   
       if (query)
         buildQuery.push(
