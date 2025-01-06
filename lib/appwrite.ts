@@ -11,6 +11,7 @@ import {
   import * as Linking from "expo-linking";
   import { openAuthSessionAsync } from "expo-web-browser";
   import { Property } from "@/types/property";
+  import { Booking, BookingStatus, BookingType } from '@/types/booking';
   
   
   export const config = {
@@ -359,3 +360,116 @@ import {
       return null;
     }
   }
+
+  export async function createBooking({
+    property_id,
+    agent_id,
+    booking_type,
+    date,
+    time_slot,
+    notes
+}: {
+    property_id: string;
+    agent_id: string;
+    booking_type: BookingType;
+    date: string;
+    time_slot: string;
+    notes?: string;
+}) {
+    try {
+        const user = await getCurrentUser();
+        if (!user) throw new Error('User not authenticated');
+
+        const booking = await databases.createDocument(
+            config.databaseId!,
+            BOOKINGS_COLLECTION_ID!,
+            ID.unique(),
+            {
+                property_id,
+                agent_id,
+                user_id: user.$id,
+                booking_type,
+                status: 'pending',
+                date,
+                time_slot,
+                notes,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            }
+        );
+
+        return booking;
+    } catch (error) {
+        console.error('Error creating booking:', error);
+        throw error;
+    }
+}
+
+export async function getUserBookings(status?: BookingStatus) {
+    try {
+        const user = await getCurrentUser();
+        if (!user) throw new Error('User not authenticated');
+
+        const queries = [Query.equal('user_id', user.$id)];
+        if (status) {
+            queries.push(Query.equal('status', status));
+        }
+
+        const result = await databases.listDocuments(
+            config.databaseId!,
+            BOOKINGS_COLLECTION_ID!,
+            queries
+        );
+
+        return result.documents;
+    } catch (error) {
+        console.error('Error fetching user bookings:', error);
+        throw error;
+    }
+}
+
+export async function updateBookingStatus(
+    bookingId: string,
+    status: BookingStatus
+) {
+    try {
+        const booking = await databases.updateDocument(
+            config.databaseId!,
+            BOOKINGS_COLLECTION_ID!,
+            bookingId,
+            {
+                status,
+                updated_at: new Date().toISOString()
+            }
+        );
+
+        return booking;
+    } catch (error) {
+        console.error('Error updating booking status:', error);
+        throw error;
+    }
+}
+
+export async function checkTimeSlotAvailability(
+    property_id: string,
+    date: string,
+    time_slot: string
+) {
+    try {
+        const result = await databases.listDocuments(
+            config.databaseId!,
+            BOOKINGS_COLLECTION_ID!,
+            [
+                Query.equal('property_id', property_id),
+                Query.equal('date', date),
+                Query.equal('time_slot', time_slot),
+                Query.notEqual('status', 'cancelled')
+            ]
+        );
+
+        return result.documents.length === 0;
+    } catch (error) {
+        console.error('Error checking time slot availability:', error);
+        throw error;
+    }
+}

@@ -7,28 +7,58 @@ import {
     View,
     Dimensions,
     Platform,
+    ActivityIndicator,
+    Modal
   } from "react-native";
+  import * as Haptics from 'expo-haptics';
   import { router, useLocalSearchParams } from "expo-router";
-  
+  import { useState } from "react";
+  import { BlurView } from "expo-blur";
+  import BookingForm from "@/components/BookingForm";
+
   import icons from "@/constants/icon";
   import images from "@/constants/images";
   import Comment from "@/components/Comment";
   import { facilities } from "@/constants/data";
-  
+
   import { useAppwrite } from "@/lib/useAppwrite";
   import { getPropertyById } from "@/lib/appwrite";
+
   
   const Property = () => {
     const { id } = useLocalSearchParams<{ id?: string }>();
-  
+    const [showBookingForm, setShowBookingForm] = useState(false);
     const windowHeight = Dimensions.get("window").height;
   
-    const { data: property } = useAppwrite({
+    const { data: property, loading } = useAppwrite({
       fn: getPropertyById,
       params: {
         id: id!,
       },
     });
+
+    const handleBookNow = async () => {
+        await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        setShowBookingForm(true);
+    };
+
+    if (loading) {
+        return (
+            <View className="flex-1 justify-center items-center bg-white">
+                <ActivityIndicator size="large" className="text-primary-300" />
+            </View>
+        );
+    }
+
+    if (!property) {
+        return (
+            <View className="flex-1 justify-center items-center bg-white">
+                <Text className="text-black-300 text-lg font-rubik-medium">
+                    Property not found
+                </Text>
+            </View>
+        );
+    }
   
     return (
       <View>
@@ -253,6 +283,32 @@ import {
             )}
           </View>
         </ScrollView>
+
+        {/* Book Now Button */}
+        <View className="absolute bg-white bottom-0 w-full rounded-t-2xl border-t border-r border-l border-primary-200 p-7">
+            <View className="flex flex-row items-center justify-between gap-10">
+                <View className="flex flex-col items-start">
+                    <Text className="text-black-200 text-xs font-rubik-medium">
+                        Price
+                    </Text>
+                    <Text
+                        numberOfLines={1}
+                        className="text-primary-300 text-start text-2xl font-rubik-bold"
+                    >
+                        ${property?.price}
+                    </Text>
+                </View>
+
+                <TouchableOpacity 
+                    onPress={handleBookNow}
+                    className="flex-1 flex flex-row items-center justify-center bg-primary-300 py-3 rounded-full shadow-md shadow-zinc-400"
+                >
+                    <Text className="text-white text-lg text-center font-rubik-bold">
+                        Book Now
+                    </Text>
+                </TouchableOpacity>
+            </View>
+        </View>
   
         <View className="absolute bg-white bottom-0 w-full rounded-t-2xl border-t border-r border-l border-primary-200 p-7">
           <View className="flex flex-row items-center justify-between gap-10">
@@ -275,6 +331,40 @@ import {
             </TouchableOpacity>
           </View>
         </View>
+        <Modal
+                visible={showBookingForm}
+                animationType="slide"
+                transparent
+                onRequestClose={() => setShowBookingForm(false)}
+            >
+                <BlurView intensity={20} className="flex-1">
+                    <View className="flex-1 justify-end">
+                        <View className="bg-white rounded-t-3xl p-5">
+                            <View className="flex-row justify-between items-center mb-5">
+                                <Text className="text-xl font-rubik-bold text-black-300">
+                                    Schedule a Booking
+                                </Text>
+                                <TouchableOpacity
+                                    onPress={() => setShowBookingForm(false)}
+                                    className="p-2"
+                                >
+                                    <Image source={icons.close} className="size-6" />
+                                </TouchableOpacity>
+                            </View>
+
+                            <BookingForm
+                                propertyId={property.$id}
+                                agentId={property.agent}
+                                onSuccess={() => {
+                                    setShowBookingForm(false);
+                                    // Optional: Show success message or navigate
+                                }}
+                                onCancel={() => setShowBookingForm(false)}
+                            />
+                        </View>
+                    </View>
+                </BlurView>
+            </Modal>
       </View>
     );
   };
