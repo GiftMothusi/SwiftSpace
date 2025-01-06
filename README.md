@@ -50,7 +50,7 @@ To get started with the SwiftSpace app, follow these steps:
 - **Expo React Native**: A toolchain built around React Native and various Expo APIs to build native Android and iOS apps using JavaScript and React.
 - **React Navigation**: A library for handling navigation in your React Native application.
 - **Expo Modules**: A collection of high-quality Expo modules that provide access to native device features and functionality.
-- **Tailwind CSS**: A utility-first CSS framework for rapidly building custom designs.
+- **Nativewind CSS**: A utility-first CSS framework for rapidly building custom designs.
 - **Jest and Enzyme**: Testing frameworks for writing and running unit tests for your React Native application.
 
 ## Contributing
