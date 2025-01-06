@@ -34,6 +34,7 @@ const icons = {
   wifi: require("@/assets/icons/wifi.png") as ImageSourcePropType,
   location: require("@/assets/icons/location.png") as ImageSourcePropType,
   edit: require("@/assets/icons/edit.png") as ImageSourcePropType,
+  close: require("@/assets/icons/close.png") as ImageSourcePropType,
 } as const;
 
 export default icons;

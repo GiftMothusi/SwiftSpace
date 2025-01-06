@@ -65,6 +65,16 @@ const TabsLayout = () => {
           ),
         }}
       />
+       <Tabs.Screen
+        name="bookings"
+        options={{
+          title: "Bookings",
+          headerShown: false,
+          tabBarIcon: ({ focused }) => (
+            <TabIcon focused={focused} icon={icons.calendar} title="Bookings" />
+          ),
+        }}
+      />
       <Tabs.Screen
         name="profile"
         options={{
