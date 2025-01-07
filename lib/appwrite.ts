@@ -176,127 +176,135 @@ import {
     }
   }
 
-  export async function createProperty(propertyData: Property, images: File[]) {
+  export async function createProperty(propertyData: Property, images: Array<{uri: string; type: string; name: string; size: number}>) {
     try {
-      // First handle image uploads
-      const imageUrls = await Promise.all(
-        images.map(async (image) => {
-          const fileId = ID.unique();
-          await storage.createFile(
-            config.bucketId!,
-            fileId,
-            image
-          );
-          
-          const fileUrl = storage.getFileView(
-            config.bucketId!,
-            fileId
-          );
-          
-          return fileUrl.toString();
-        })
-      );
-  
-      // Create the property document with uploaded image URLs
-      const property = await databases.createDocument(
-        config.databaseId!,
-        config.propertiesCollectionId!,
-        ID.unique(),
-        {
-          ...propertyData,
-          images: imageUrls,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        }
-      );
-  
-      return property;
+        // First handle image uploads
+        const imageUrls = await Promise.all(
+            images.map(async (image) => {
+                const fileId = ID.unique();
+                await storage.createFile(
+                    config.bucketId!,
+                    fileId,
+                    image // Now image has the correct type
+                );
+                
+                const fileUrl = storage.getFileView(
+                    config.bucketId!,
+                    fileId
+                );
+                
+                return fileUrl.toString();
+            })
+        );
+
+        // Create the property document with uploaded image URLs
+        const property = await databases.createDocument(
+            config.databaseId!,
+            config.propertiesCollectionId!,
+            ID.unique(),
+            {
+                ...propertyData,
+                images: imageUrls,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+            }
+        );
+
+        return property;
     } catch (error) {
-      console.error('Error creating property:', error);
-      throw error;
+        console.error('Error creating property:', error);
+        throw error;
     }
-  }
+}
   
   // Function to update an existing property
   export async function updateProperty(
     propertyId: string, 
     propertyData: Partial<Property>,
-    newImages?: File[]
-  ) {
+    newImages?: Array<{
+        uri: string;
+        type: string;
+        name: string;
+        size: number;
+    }>
+) {
     try {
-      let imageUrls = propertyData.images || [];
-  
-      // Handle any new images that need to be uploaded
-      if (newImages?.length) {
-        const newImageUrls = await Promise.all(
-          newImages.map(async (image) => {
-            const fileId = ID.unique();
-            await storage.createFile(
-              config.bucketId!,
-              fileId,
-              image
+        let imageUrls = propertyData.images || [];
+
+        // Handle any new images that need to be uploaded
+        if (newImages?.length) {
+            const newImageUrls = await Promise.all(
+                newImages.map(async (image) => {
+                    const fileId = ID.unique();
+                    await storage.createFile(
+                        config.bucketId!,
+                        fileId,
+                        {
+                            uri: image.uri,
+                            type: image.type,
+                            name: image.name,
+                            size: image.size
+                        }
+                    );
+                    
+                    const fileUrl = storage.getFileView(
+                        config.bucketId!,
+                        fileId
+                    );
+                    
+                    return fileUrl.toString();
+                })
             );
             
-            const fileUrl = storage.getFileView(
-              config.bucketId!,
-              fileId
-            );
-            
-            return fileUrl.toString();
-          })
-        );
-        
-        imageUrls = [...imageUrls, ...newImageUrls];
-      }
-  
-      // Update the property document
-      const property = await databases.updateDocument(
-        config.databaseId!,
-        config.propertiesCollectionId!,
-        propertyId,
-        {
-          ...propertyData,
-          images: imageUrls,
-          updatedAt: new Date().toISOString(),
+            imageUrls = [...imageUrls, ...newImageUrls];
         }
-      );
-  
-      return property;
+
+        // Update the property document
+        const property = await databases.updateDocument(
+            config.databaseId!,
+            config.propertiesCollectionId!,
+            propertyId,
+            {
+                ...propertyData,
+                images: imageUrls,
+                updatedAt: new Date().toISOString(),
+            }
+        );
+
+        return property;
     } catch (error) {
-      console.error('Error updating property:', error);
-      throw error;
+        console.error('Error updating property:', error);
+        throw error;
     }
-  }
+}
   
   // Function to delete a property and its associated images
   export async function deleteProperty(propertyId: string) {
     try {
-      // First get the property to find associated images
-      const property = await getPropertyById({ id: propertyId });
-      
-      // Delete all associated images from storage
-      if (property?.images?.length) {
-        await Promise.all(
-          property.images.map(async (imageUrl) => {
-            const fileId = imageUrl.split('/').pop()!;
-            await storage.deleteFile(config.bucketId!, fileId);
-          })
+        const property = await getPropertyById({ id: propertyId });
+        
+        // Delete all associated images from storage
+        if (property?.images?.length) {
+            await Promise.all(
+                property.images.map(async (imageUrl: string) => {
+                    const fileId = imageUrl.split('/').pop()!;
+                    await storage.deleteFile(config.bucketId!, fileId);
+                })
+            );
+        }
+
+        await databases.deleteDocument(
+            config.databaseId!,
+            config.propertiesCollectionId!,
+            propertyId
         );
-      }
-  
-      // Delete the property document
-      await databases.deleteDocument(
-        config.databaseId!,
-        config.propertiesCollectionId!,
-        propertyId
-      );
-  
-      return true;
+
+        return true;
     } catch (error) {
-      console.error('Error deleting property:', error);
-      throw error;
+        console.error('Error deleting property:', error);
+        throw error;
     }
-  }
+}
 
   export async function addToFavorites(propertyId: string, userId: string) {
     try {

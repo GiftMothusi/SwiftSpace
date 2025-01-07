@@ -1,13 +1,13 @@
-import migrateExistingProperties from './migratePropertyStatus';
+// scripts/runMigration.ts
+import seed from '../lib/seed';
 
-console.log('Starting migration script...');
-
-migrateExistingProperties()
-  .then(() => {
-    console.log('Migration completed successfully');
-    process.exit(0);
-  })
-  .catch((error) => {
-    console.error('Migration failed:', error);
-    process.exit(1);
-  });
+console.log("🌱 Starting database seeding process...");
+seed()
+    .then(() => {
+        console.log("✅ Database seeding completed successfully!");
+        process.exit(0);
+    })
+    .catch((error) => {
+        console.error("❌ Database seeding failed:", error);
+        process.exit(1);
+    });
