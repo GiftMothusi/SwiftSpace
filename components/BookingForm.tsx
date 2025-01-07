@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, TextInput, Alert, ActivityIndicator } from 'react-native';
 import { useGlobalContext } from '@/lib/global-provider';
-import { createBooking, checkTimeSlotAvailability } from '@/lib/appwrite';
-import { BOOKING_TYPES, TIME_SLOTS, BookingType } from '@/types/booking';
+import { createBooking, checkTimeSlotAvailability, getPropertyById } from '@/lib/appwrite';
+import { BOOKING_TYPES, TIME_SLOTS, BookingType, PropertyStatus, PropertyStatusColors } from '@/types/booking';
 import * as Haptics from 'expo-haptics';
 
+// Define the props for the BookingForm component
 interface BookingFormProps {
     propertyId: string;
     agentId: string;
@@ -20,18 +21,19 @@ const BookingForm = ({ propertyId, agentId, onSuccess, onCancel }: BookingFormPr
     const [selectedTimeSlot, setSelectedTimeSlot] = useState('');
     const [notes, setNotes] = useState('');
 
+    // Define the function to handle the booking submission
     const handleSubmit = async () => {
         try {
             setLoading(true);
             await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
-            // Validate inputs
+            // Validate user inputs
             if (!selectedDate || !selectedTimeSlot) {
                 Alert.alert('Error', 'Please select both date and time');
                 return;
             }
 
-            // Check availability
+            // Check the availability of the selected time slot
             const isAvailable = await checkTimeSlotAvailability(
                 propertyId,
                 selectedDate,
@@ -43,7 +45,21 @@ const BookingForm = ({ propertyId, agentId, onSuccess, onCancel }: BookingFormPr
                 return;
             }
 
-            // Create booking
+            // Check the status of the property
+            const property = await getPropertyById({ id: propertyId });
+            if (
+                property?.status === 'Rented' ||
+                property?.status === 'Sold' ||
+                property?.status === 'Under-Contract'
+            ) {
+                Alert.alert(
+                    'Error',
+                    `The accommodation cannot be booked as it is currently ${property?.status}.`
+                );
+                return;
+            }
+
+            // Create the booking
             await createBooking({
                 property_id: propertyId,
                 agent_id: agentId,
@@ -53,9 +69,11 @@ const BookingForm = ({ propertyId, agentId, onSuccess, onCancel }: BookingFormPr
                 notes
             });
 
+            // Display a success message
             Alert.alert('Success', 'Booking request sent successfully');
             onSuccess?.();
         } catch (error) {
+            // Display a generic error message
             Alert.alert('Error', 'Failed to create booking');
         } finally {
             setLoading(false);
@@ -145,7 +163,7 @@ const BookingForm = ({ propertyId, agentId, onSuccess, onCancel }: BookingFormPr
             <View className="flex-row gap-4">
                 <TouchableOpacity
                     onPress={onCancel}
-                    className="flex-1 py-3 rounded-full bg-primary-100"
+                    className="flex-1 py-3 rounded-full bg-[#F0F0F0]"
                 >
                     <Text className="text-center font-rubik-bold text-black-300">
                         Cancel
@@ -161,7 +179,7 @@ const BookingForm = ({ propertyId, agentId, onSuccess, onCancel }: BookingFormPr
                         <ActivityIndicator color="white" />
                     ) : (
                         <Text className="text-center font-rubik-bold text-white">
-                            Book Now
+                            Submit
                         </Text>
                     )}
                 </TouchableOpacity>

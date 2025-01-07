@@ -27,7 +27,7 @@ const Comment = ({ item }: Props) => {
           <Image
             source={icons.heart}
             className="size-5"
-            tintColor={"#0061FF"}
+            tintColor={"#AED6A1"}
           />
           <Text className="text-black-300 text-sm font-rubik-medium ml-2">
             120
