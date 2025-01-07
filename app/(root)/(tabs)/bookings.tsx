@@ -110,12 +110,19 @@ const BookingsScreen = () => {
 
     if (error) {
         return (
-            <View className="flex-1 justify-center items-center">
-                <Text className="text-danger font-rubik-medium">{error}</Text>
+            <View className="flex-1 justify-center items-center bg-white">
+                <Text className="text-danger text-base font-rubik-medium text-center px-4">
+                    {error}
+                </Text>
+                <TouchableOpacity 
+                    onPress={fetchBookings}
+                    className="mt-4 bg-primary-300 px-6 py-2 rounded-full"
+                >
+                    <Text className="text-white font-rubik-medium">Try Again</Text>
+                </TouchableOpacity>
             </View>
         );
     }
-
     return (
         <SafeAreaView className="flex-1 bg-white">
             <View className="flex-row items-center justify-between px-5 py-4">
