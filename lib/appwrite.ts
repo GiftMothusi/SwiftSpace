@@ -26,6 +26,7 @@ import {
     propertiesCollectionId:
       process.env.EXPO_PUBLIC_APPWRITE_PROPERTIES_COLLECTION_ID,
     favoritesCollectionId: process.env.EXPO_PUBLIC_APPWRITE_FAVORITES_COLLECTION_ID,
+    bookingsCollectionId: process.env.EXPO_PUBLIC_APPWRITE_BOOKINGS_COLLECTION_ID,
     bucketId: process.env.EXPO_PUBLIC_APPWRITE_BUCKET_ID,
   };
   
@@ -382,7 +383,7 @@ import {
 
         const booking = await databases.createDocument(
             config.databaseId!,
-            BOOKINGS_COLLECTION_ID!,
+            config.bookingsCollectionId!, // Changed from BOOKINGS_COLLECTION_ID
             ID.unique(),
             {
                 property_id,
@@ -417,7 +418,7 @@ export async function getUserBookings(status?: BookingStatus) {
 
         const result = await databases.listDocuments(
             config.databaseId!,
-            BOOKINGS_COLLECTION_ID!,
+            config.bookingsCollectionId!, // Changed from BOOKINGS_COLLECTION_ID
             queries
         );
 
@@ -435,7 +436,7 @@ export async function updateBookingStatus(
     try {
         const booking = await databases.updateDocument(
             config.databaseId!,
-            BOOKINGS_COLLECTION_ID!,
+            config.bookingsCollectionId!, // Changed from BOOKINGS_COLLECTION_ID
             bookingId,
             {
                 status,
@@ -458,7 +459,7 @@ export async function checkTimeSlotAvailability(
     try {
         const result = await databases.listDocuments(
             config.databaseId!,
-            BOOKINGS_COLLECTION_ID!,
+            config.bookingsCollectionId!, // Changed from BOOKINGS_COLLECTION_ID
             [
                 Query.equal('property_id', property_id),
                 Query.equal('date', date),
