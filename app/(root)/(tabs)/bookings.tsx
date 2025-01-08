@@ -9,13 +9,20 @@ import {
     ActivityIndicator,
     Alert,
 } from 'react-native';
+import { router } from 'expo-router';
+import { GestureResponderEvent } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useBookings } from '@/hooks/useBooking';
-import { BOOKING_STATUS, BookingStatus } from '@/types/booking';
+import { BOOKING_STATUS, BookingStatus, Booking } from '@/types/booking';
 import { useGlobalContext } from '@/lib/global-provider';
 import NoResults from '@/components/NoResults';
 import icons from '@/constants/icon';
 import { formatDate } from '@/lib/utils';
+
+
+interface BookingCardProps {
+    item: Booking;
+}
 
 const BookingStatusBadge = ({ status }: { status: BookingStatus }) => {
     const getStatusColor = () => {
@@ -42,8 +49,15 @@ const BookingStatusBadge = ({ status }: { status: BookingStatus }) => {
     );
 };
 
-const BookingCard = ({ item }) => {
+const BookingCard = ({ item }: BookingCardProps) => {
     const { updateStatus } = useBookings();
+    
+    // Add navigation
+    const handleCardPress = () => {
+        if (item.property_id) {
+            router.push(`/properties/${item.property_id}`);
+        }
+    };
 
     const handleCancel = () => {
         Alert.alert(
@@ -61,17 +75,21 @@ const BookingCard = ({ item }) => {
     };
 
     return (
-        <View className="bg-white p-4 rounded-lg shadow-sm mb-4">
+        <TouchableOpacity 
+            onPress={handleCardPress}
+            className="bg-white p-4 rounded-lg shadow-sm mb-4"
+        >
             <View className="flex-row justify-between items-start">
                 <View className="flex-1">
                     <Text className="text-lg font-rubik-bold text-black-300">
-                        {item.property.name}
+                        {item.property?.name}
+
                     </Text>
                     <Text className="text-sm font-rubik text-black-200 mt-1">
-                        {item.property.address}
+                        {item.property?.address}
                     </Text>
                 </View>
-                <BookingStatusBadge status={item.status} />
+                <BookingStatusBadge status={item.status as BookingStatus} />
             </View>
 
             <View className="flex-row items-center mt-4">
@@ -80,6 +98,24 @@ const BookingCard = ({ item }) => {
                     {formatDate(item.date)} • {item.time_slot}
                 </Text>
             </View>
+
+            {/* Add property details */}
+            {item.property && (
+                <View className="flex-row items-center mt-2 gap-4">
+                    <View className="flex-row items-center">
+                        <Image source={icons.bed} className="w-4 h-4" />
+                        <Text className="ml-1 text-black-200 text-sm">
+                            {item.property.bedrooms} Beds
+                        </Text>
+                    </View>
+                    <View className="flex-row items-center">
+                        <Image source={icons.bath} className="w-4 h-4" />
+                        <Text className="ml-1 text-black-200 text-sm">
+                            {item.property.bathrooms} Baths
+                        </Text>
+                    </View>
+                </View>
+            )}
 
             {item.notes && (
                 <Text className="mt-2 font-rubik text-black-200">
@@ -97,7 +133,7 @@ const BookingCard = ({ item }) => {
                     </Text>
                 </TouchableOpacity>
             )}
-        </View>
+        </TouchableOpacity>
     );
 };
 
@@ -108,21 +144,9 @@ const BookingsScreen = () => {
         fetchBookings();
     }, []);
 
-    if (error) {
-        return (
-            <View className="flex-1 justify-center items-center bg-white">
-                <Text className="text-danger text-base font-rubik-medium text-center px-4">
-                    {error}
-                </Text>
-                <TouchableOpacity 
-                    onPress={fetchBookings}
-                    className="mt-4 bg-primary-300 px-6 py-2 rounded-full"
-                >
-                    <Text className="text-white font-rubik-medium">Try Again</Text>
-                </TouchableOpacity>
-            </View>
-        );
-    }
+    const handleRefresh = (event: GestureResponderEvent) => {
+        fetchBookings();
+    };
     return (
         <SafeAreaView className="flex-1 bg-white">
             <View className="flex-row items-center justify-between px-5 py-4">

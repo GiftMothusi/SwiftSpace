@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, TextInput, Alert, ActivityIndicator } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useGlobalContext } from '@/lib/global-provider';
 import { createBooking, checkTimeSlotAvailability, getPropertyById } from '@/lib/appwrite';
-import { BOOKING_TYPES, TIME_SLOTS, BookingType, PropertyStatus, PropertyStatusColors } from '@/types/booking';
+import { BOOKING_TYPES, TIME_SLOTS, BookingType } from '@/types/booking';
 import * as Haptics from 'expo-haptics';
 
-// Define the props for the BookingForm component
 interface BookingFormProps {
     propertyId: string;
     agentId: string;
@@ -18,22 +18,35 @@ const BookingForm = ({ propertyId, agentId, onSuccess, onCancel }: BookingFormPr
     const [loading, setLoading] = useState(false);
     const [bookingType, setBookingType] = useState<BookingType>(BOOKING_TYPES.VIEWING);
     const [selectedDate, setSelectedDate] = useState('');
+    const [showDatePicker, setShowDatePicker] = useState(false);
     const [selectedTimeSlot, setSelectedTimeSlot] = useState('');
     const [notes, setNotes] = useState('');
 
-    // Define the function to handle the booking submission
+    const onDateChange = (event: any, selectedDate?: Date) => {
+        setShowDatePicker(false);
+        if (selectedDate) {
+            setSelectedDate(selectedDate.toISOString().split('T')[0]);
+        }
+    };
+
     const handleSubmit = async () => {
         try {
             setLoading(true);
             await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
-            // Validate user inputs
+            // Validate date and time selection
             if (!selectedDate || !selectedTimeSlot) {
                 Alert.alert('Error', 'Please select both date and time');
                 return;
             }
 
-            // Check the availability of the selected time slot
+            // Check if date is in the past
+            if (new Date(selectedDate) < new Date(new Date().setHours(0,0,0,0))) {
+                Alert.alert('Error', 'Please select a future date');
+                return;
+            }
+
+            // Check time slot availability
             const isAvailable = await checkTimeSlotAvailability(
                 propertyId,
                 selectedDate,
@@ -45,7 +58,7 @@ const BookingForm = ({ propertyId, agentId, onSuccess, onCancel }: BookingFormPr
                 return;
             }
 
-            // Check the status of the property
+            // Check property status
             const property = await getPropertyById({ id: propertyId });
             if (
                 property?.status === 'Rented' ||
@@ -54,27 +67,26 @@ const BookingForm = ({ propertyId, agentId, onSuccess, onCancel }: BookingFormPr
             ) {
                 Alert.alert(
                     'Error',
-                    `The accommodation cannot be booked as it is currently ${property?.status}.`
+                    `The property cannot be booked as it is currently ${property?.status}.`
                 );
                 return;
             }
 
-            // Create the booking
+            // Create booking
             await createBooking({
                 property_id: propertyId,
                 agent_id: agentId,
                 booking_type: bookingType,
                 date: selectedDate,
                 time_slot: selectedTimeSlot,
-                notes
+                notes: notes.trim()
             });
 
-            // Display a success message
             Alert.alert('Success', 'Booking request sent successfully');
             onSuccess?.();
         } catch (error) {
-            // Display a generic error message
-            Alert.alert('Error', 'Failed to create booking');
+            console.error('Booking error:', error);
+            Alert.alert('Error', 'Failed to create booking. Please try again.');
         } finally {
             setLoading(false);
         }
@@ -111,15 +123,21 @@ const BookingForm = ({ propertyId, agentId, onSuccess, onCancel }: BookingFormPr
                 <Text className="text-lg font-rubik-bold mb-2">Select Date</Text>
                 <TouchableOpacity
                     className="border border-primary-200 rounded-lg p-3"
-                    onPress={() => {
-                        // Date picker to be implemented
-                        setSelectedDate('2024-01-10');
-                    }}
+                    onPress={() => setShowDatePicker(true)}
                 >
                     <Text className="font-rubik text-black-300">
                         {selectedDate || 'Select a date'}
                     </Text>
                 </TouchableOpacity>
+                {showDatePicker && (
+                    <DateTimePicker
+                        value={selectedDate ? new Date(selectedDate) : new Date()}
+                        mode="date"
+                        display="default"
+                        onChange={onDateChange}
+                        minimumDate={new Date()}
+                    />
+                )}
             </View>
 
             {/* Time Slot Selection */}
@@ -159,11 +177,11 @@ const BookingForm = ({ propertyId, agentId, onSuccess, onCancel }: BookingFormPr
                 />
             </View>
 
-            {/* Submit Button */}
+            {/* Buttons */}
             <View className="flex-row gap-4">
                 <TouchableOpacity
                     onPress={onCancel}
-                    className="flex-1 py-3 rounded-full bg-[#F0F0F0]"
+                    className="flex-1 py-3 rounded-full bg-gray-100"
                 >
                     <Text className="text-center font-rubik-bold text-black-300">
                         Cancel
@@ -172,8 +190,12 @@ const BookingForm = ({ propertyId, agentId, onSuccess, onCancel }: BookingFormPr
                 
                 <TouchableOpacity
                     onPress={handleSubmit}
-                    disabled={loading}
-                    className="flex-1 py-3 rounded-full bg-primary-300"
+                    disabled={loading || !selectedDate || !selectedTimeSlot}
+                    className={`flex-1 py-3 rounded-full ${
+                        loading || !selectedDate || !selectedTimeSlot
+                            ? 'bg-gray-300'
+                            : 'bg-primary-300'
+                    }`}
                 >
                     {loading ? (
                         <ActivityIndicator color="white" />

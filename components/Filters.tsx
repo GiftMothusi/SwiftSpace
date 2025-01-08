@@ -4,10 +4,10 @@ import { Text, ScrollView, TouchableOpacity, View } from "react-native";
 import { categories } from "@/constants/data";
 import { PropertyStatus } from "@/types/property";
 
-const statusFilters: PropertyStatus[] = ["Available", "Rented", "Sold", "Under Contract"];
+const statusFilters: PropertyStatus[] = ["Available", "Rented", "Sold", "Under-Contract"];
 
 const Filters = () => {
-  const params = useLocalSearchParams<{ filter?: string }>();
+  const params = useLocalSearchParams<{ filter?: string; status?: string }>();
   const [selectedCategory, setSelectedCategory] = useState(params.filter || "All");
   const [selectedStatus, setSelectedStatus] = useState(params.status || "");
 
