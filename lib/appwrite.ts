@@ -376,7 +376,7 @@ import {
     booking_type,
     date,
     time_slot,
-    notes
+    notes = ''
 }: {
     property_id: string;
     agent_id: string;
@@ -391,7 +391,7 @@ import {
 
         const booking = await databases.createDocument(
             config.databaseId!,
-            config.bookingsCollectionId!, // Changed from BOOKINGS_COLLECTION_ID
+            config.bookingsCollectionId!,
             ID.unique(),
             {
                 property_id,
@@ -402,8 +402,6 @@ import {
                 date,
                 time_slot,
                 notes,
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString()
             }
         );
 
@@ -465,9 +463,14 @@ export async function checkTimeSlotAvailability(
     time_slot: string
 ) {
     try {
+        // Check if date is in the past
+        if (new Date(date) < new Date(new Date().setHours(0,0,0,0))) {
+            return false;
+        }
+
         const result = await databases.listDocuments(
             config.databaseId!,
-            config.bookingsCollectionId!, // Changed from BOOKINGS_COLLECTION_ID
+            config.bookingsCollectionId!,
             [
                 Query.equal('property_id', property_id),
                 Query.equal('date', date),
