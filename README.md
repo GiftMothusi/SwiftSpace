@@ -66,9 +66,4 @@ We welcome contributions from the community! If you'd like to contribute to the 
 
 This project is licensed under the [MIT License](LICENSE).
 
-## Contact
 
-For any questions or inquiries, please reach out to us at:
-
-- Email: support@swiftspace.com
-- GitHub: [your-username/swiftspace](https://github.com/your-username/swiftspace)
