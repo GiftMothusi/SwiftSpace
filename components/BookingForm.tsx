@@ -13,6 +13,7 @@ interface BookingFormProps {
     onCancel?: () => void;
 }
 
+
 const BookingForm = ({ propertyId, agentId, onSuccess, onCancel }: BookingFormProps) => {
     const { user } = useGlobalContext();
     const [loading, setLoading] = useState(false);
