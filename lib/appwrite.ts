@@ -12,6 +12,7 @@ import {
   import { openAuthSessionAsync } from "expo-web-browser";
   import { Property } from "@/types/property";
   import { Booking, BookingStatus, BookingType } from '@/types/booking';
+  import { PropertySearchFilters } from "@/types/property";
   
   
   export const config = {
@@ -40,6 +41,15 @@ import {
   export const account = new Account(client);
   export const databases = new Databases(client);
   export const storage = new Storage(client);
+
+
+  export interface GetPropertiesParams {
+    filter?: string | undefined;
+    status?: string | undefined;
+    query?: string | undefined;
+    limit?: number | undefined;
+    searchFilters?: PropertySearchFilters | undefined;
+  }
   
   export async function login() {
     try {
@@ -117,36 +127,56 @@ import {
     }
   }
   
+
   export async function getProperties({
     filter,
     status,
     query,
     limit,
-  }: {
-    filter: string;
-    status?: string;
-    query: string;
-    limit?: number;
-  }) {
+    searchFilters,
+  }: GetPropertiesParams = {}) {
     try {
       const buildQuery = [Query.orderDesc("$createdAt")];
   
-      if (filter && filter !== "All")
+      // Only add filters if they exist
+      if (filter && filter !== "All") {
         buildQuery.push(Query.equal("type", filter));
+      }
       
-      if (status)
+      if (status) {
         buildQuery.push(Query.equal("status", status));
+      }
   
-      if (query)
+      // Add search filters if they exist
+      if (searchFilters) {
+        if (searchFilters.priceMin) {
+          buildQuery.push(Query.greaterThanEqual("price", searchFilters.priceMin));
+        }
+        if (searchFilters.priceMax) {
+          buildQuery.push(Query.lessThanEqual("price", searchFilters.priceMax));
+        }
+        if (searchFilters.propertyType) {
+          buildQuery.push(Query.equal("type", searchFilters.propertyType));
+        }
+        if (searchFilters.facilities && searchFilters.facilities.length > 0) {
+          buildQuery.push(Query.search("facilities", searchFilters.facilities.join(" ")));
+        }
+      }
+  
+      // Only add query if it exists
+      if (query) {
         buildQuery.push(
           Query.or([
             Query.search("name", query),
             Query.search("address", query),
-            Query.search("type", query),
+            Query.search("description", query),
           ])
         );
+      }
   
-      if (limit) buildQuery.push(Query.limit(limit));
+      if (limit) {
+        buildQuery.push(Query.limit(limit));
+      }
   
       const result = await databases.listDocuments(
         config.databaseId!,
@@ -156,7 +186,7 @@ import {
   
       return result.documents;
     } catch (error) {
-      console.error(error);
+      console.error("Error fetching properties:", error);
       return [];
     }
   }

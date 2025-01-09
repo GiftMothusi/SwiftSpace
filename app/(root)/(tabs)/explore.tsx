@@ -11,36 +11,54 @@ import {
   import { router, useLocalSearchParams } from "expo-router";
   
   import icons from "@/constants/icon";
-  import Search from "@/components/Search";
+  import EnhancedSearch from "@/components/Search/EnhancedSearch";
   import { Card } from "@/components/Cards";
   import Filters from "@/components/Filters";
   import NoResults from "@/components/NoResults";
   
-  import { getProperties } from "@/lib/appwrite";
+  import { getProperties, GetPropertiesParams } from "@/lib/appwrite";
   import { useAppwrite } from "@/lib/useAppwrite";
+  import { PropertySearchFilters } from "@/types/property";
+  import { PROPERTY_TYPES } from "@/constants/propertyContants";
   
   const Explore = () => {
     const params = useLocalSearchParams<{ query?: string; filter?: string }>();
+  
+    // Create initial params with proper typing
+    const initialParams: GetPropertiesParams = {
+      filter: params.filter || undefined,
+      query: params.query || undefined,
+      searchFilters: undefined,
+    };
   
     const {
       data: properties,
       refetch,
       loading,
-    } = useAppwrite({
+    } = useAppwrite<any, GetPropertiesParams>({
       fn: getProperties,
-      params: {
-        filter: params.filter!,
-        query: params.query!,
-      },
+      params: initialParams,
       skip: true,
     });
   
     useEffect(() => {
-      refetch({
-        filter: params.filter!,
-        query: params.query!,
-      });
+      // Create effect params with proper typing
+      const effectParams: GetPropertiesParams = {
+        filter: params.filter || undefined,
+        query: params.query || undefined,
+      };
+      refetch(effectParams);
     }, [params.filter, params.query]);
+  
+    const handleSearch = async (filters: PropertySearchFilters) => {
+      // Create search params with proper typing
+      const searchParams: GetPropertiesParams = {
+        filter: params.filter || undefined,
+        query: params.query || undefined,
+        searchFilters: filters,
+      };
+      refetch(searchParams);
+    };
   
     const handleCardPress = (id: string) => router.push(`/properties/${id}`);
   
@@ -79,7 +97,7 @@ import {
                 <Image source={icons.bell} className="w-6 h-6" />
               </View>
   
-              <Search />
+              <EnhancedSearch onSearch={handleSearch} />
   
               <View className="mt-5">
                 <Filters />
